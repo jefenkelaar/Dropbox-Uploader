@@ -1,0 +1,41 @@
+diff --git a/SoapySDDC/Settings.cpp b/SoapySDDC/Settings.cpp
+index 2cebaa2..e0b46d3 100644
+--- a/SoapySDDC/Settings.cpp
++++ b/SoapySDDC/Settings.cpp
+@@ -271,15 +271,36 @@ SoapySDR::Range SoapySDDC::getGainRange(const int direction, const size_t channe
+         return SoapySDR::Range();
+ }
+ 
++// Kies automatisch de juiste ingang: in HF-mode (direct sampling) kan alleen
++// tot de Nyquist-frequentie van de ADC worden afgestemd. Een hogere frequentie
++// (bv. 145 of 435 MHz in SkyRoof) gaf een tunebin buiten de FFT-buffer en
++// daarmee een access violation in de r2iq-thread.
++static void autoSelectMode(RadioHandlerClass &rh, double frequency)
++{
++    const double hfLimit = (double)adcnominalfreq / 2.0;
++    if (rh.GetmodeRF() != VHFMODE && frequency >= hfLimit)
++    {
++        SoapySDR_logf(SOAPY_SDR_INFO, "SDDC: %.0f Hz is boven HF-bereik, schakel naar VHF-ingang", frequency);
++        rh.UpdatemodeRF(VHFMODE);
++    }
++    else if (rh.GetmodeRF() == VHFMODE && frequency < 24000000.0)
++    {
++        SoapySDR_logf(SOAPY_SDR_INFO, "SDDC: %.0f Hz is onder VHF-bereik, schakel naar HF-ingang", frequency);
++        rh.UpdatemodeRF(HFMODE);
++    }
++}
++
+ void SoapySDDC::setFrequency(const int, const size_t, const double frequency, const SoapySDR::Kwargs &)
+ {
+     DbgPrintf("SoapySDDC::setFrequency %f\n", frequency);
++    autoSelectMode(RadioHandler, frequency);
+     centerFrequency = RadioHandler.TuneLO((uint64_t)frequency);
+ }
+ 
+ void SoapySDDC::setFrequency(const int, const size_t, const std::string &, const double frequency, const SoapySDR::Kwargs &)
+ {
+     DbgPrintf("SoapySDDC::setFrequency\n");
++    autoSelectMode(RadioHandler, frequency);
+     centerFrequency = RadioHandler.TuneLO((uint64_t)frequency);
+ }
+ 
