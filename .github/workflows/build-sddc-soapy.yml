@@ -9,6 +9,9 @@ on:
   push:
     branches: [skyroof-rx888]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-2022
@@ -54,6 +57,18 @@ jobs:
           Start SkyRoof opnieuw en kies de RX888 in Tools > SDR Devices.
           "@ | Set-Content out\LEESMIJ.txt
           Get-ChildItem out
+
+      - name: DLL's in de branch zetten (map dist/)
+        shell: bash
+        run: |
+          git clone -b skyroof-rx888 "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" repo
+          mkdir -p repo/dist && cp out/* repo/dist/
+          cd repo
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add dist
+          git commit -m "Gebouwde SoapySDDC-module [skip ci]" || echo "niets nieuw"
+          git push
 
       - uses: actions/upload-artifact@v4
         with:
