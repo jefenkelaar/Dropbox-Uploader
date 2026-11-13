@@ -1,0 +1,59 @@
+name: Build SoapySDDC (RX888) voor Windows x64
+
+# Bouwt de SoapySDR-module SDDCSupport.dll uit de officiele bron
+# (github.com/ik1xpv/ExtIO_sddc) zodat SkyRoof de RX-888 MkII herkent.
+# Start handmatig via het tabblad Actions -> "Run workflow".
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [skyroof-rx888]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Broncode ExtIO_sddc ophalen
+        uses: actions/checkout@v4
+        with:
+          repository: ik1xpv/ExtIO_sddc
+          path: src
+
+      - name: SoapySDR 0.8.1 installeren (vcpkg)
+        run: |
+          cd C:\vcpkg
+          git pull
+          .\vcpkg.exe install soapysdr:x64-windows
+
+      - name: CMake configureren (x64)
+        shell: bash
+        run: |
+          cmake -S src -B build64 -G "Visual Studio 17 2022" -A x64 \
+            "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: SDDCSupport.dll bouwen
+        shell: bash
+        run: cmake --build build64 --config Release --target SDDCSupport
+
+      - name: Pakket samenstellen
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          $dll = Get-ChildItem -Recurse build64 -Filter SDDCSupport.dll | Select-Object -First 1
+          Copy-Item $dll.FullName out\
+          $fftw = Get-ChildItem -Recurse build64 -Filter libfftw3f-3.dll | Select-Object -First 1
+          Copy-Item $fftw.FullName out\
+          @"
+          Kopieer SDDCSupport.dll naar:
+            C:\Program Files\Afreet\SkyRoof\lib\SoapySDR\modules0.8\
+          Kopieer libfftw3f-3.dll naar zowel die map als naar:
+            C:\Program Files\Afreet\SkyRoof\
+          Start SkyRoof opnieuw en kies de RX888 in Tools > SDR Devices.
+          "@ | Set-Content out\LEESMIJ.txt
+          Get-ChildItem out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SoapySDDC-win64
+          path: out/
