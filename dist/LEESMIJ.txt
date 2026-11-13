@@ -1,0 +1,5 @@
+Kopieer SDDCSupport.dll naar:
+  C:\Program Files\Afreet\SkyRoof\lib\SoapySDR\modules0.8\
+Kopieer libfftw3f-3.dll naar zowel die map als naar:
+  C:\Program Files\Afreet\SkyRoof\
+Start SkyRoof opnieuw en kies de RX888 in Tools > SDR Devices.
