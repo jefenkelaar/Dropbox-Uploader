@@ -33,7 +33,8 @@ jobs:
         run: |
           cmake -S src -B build64 -G "Visual Studio 17 2022" -A x64 \
             "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" \
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=Release \
+            "-DCMAKE_SHARED_LINKER_FLAGS=/MAP"
 
       - name: SDDCSupport.dll bouwen
         shell: bash
@@ -49,6 +50,7 @@ jobs:
           Copy-Item $dll.FullName out\
           $fftw = Get-ChildItem -Recurse build64 -Filter libfftw3f-3.dll | Select-Object -First 1
           Copy-Item $fftw.FullName out\
+          Get-ChildItem -Recurse build64 -Filter SDDCSupport.map | Select-Object -First 1 | Copy-Item -Destination out\
           @"
           Kopieer SDDCSupport.dll naar:
             C:\Program Files\Afreet\SkyRoof\lib\SoapySDR\modules0.8\
