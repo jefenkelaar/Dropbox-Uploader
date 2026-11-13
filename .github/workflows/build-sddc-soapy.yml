@@ -34,7 +34,9 @@ jobs:
 
       - name: SDDCSupport.dll bouwen
         shell: bash
-        run: cmake --build build64 --config Release --target SDDCSupport
+        run: |
+          cmake --build build64 --config Release --target LIBFFTW
+          cmake --build build64 --config Release --target SDDCSupport
 
       - name: Pakket samenstellen
         shell: pwsh
