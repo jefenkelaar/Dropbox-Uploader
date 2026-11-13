@@ -1,8 +1,19 @@
 diff --git a/SoapySDDC/Settings.cpp b/SoapySDDC/Settings.cpp
-index 2cebaa2..e0b46d3 100644
+index 2cebaa2..c647e20 100644
 --- a/SoapySDDC/Settings.cpp
 +++ b/SoapySDDC/Settings.cpp
-@@ -271,15 +271,36 @@ SoapySDR::Range SoapySDDC::getGainRange(const int direction, const size_t channe
+@@ -46,6 +46,10 @@ SoapySDDC::SoapySDDC(const SoapySDR::Kwargs &args) : deviceId(-1),
+     Fx3->Enumerate(idx, devicelist.dev[0]);
+     Fx3->Open();
+     RadioHandler.Init(Fx3, _Callback, nullptr, this);
++    // SkyRoof (satellieten) werkt altijd boven het HF-bereik: start in VHF-mode,
++    // zodat ook de gain-bereiken die SkyRoof bij het zoeken opvraagt die van de
++    // VHF-tuner zijn (RF 0..49.6 dB, IF -4.7..40.8 dB).
++    RadioHandler.UpdatemodeRF(VHFMODE);
+ 
+     if (supportsHighADCFrequency()) {
+         adcnominalfreq = 128000000;
+@@ -271,15 +275,36 @@ SoapySDR::Range SoapySDDC::getGainRange(const int direction, const size_t channe
          return SoapySDR::Range();
  }
  
